@@ -96,38 +96,25 @@ newGame.addEventListener("click", () => {
 document.addEventListener("keydown", (event: KeyboardEvent) => {
   if (event.key === "ArrowDown") {
     // Arrow down key is pressed
-    console.log("Arrow down key is pressed!");
     PlayGame.addRandomTile(PlayGame.board);
   } else if (event.key === "ArrowUp") {
     // Arrow down key is pressed
-    console.log("Arrow up key is pressed!");
-    PlayGame.addRandomTile(PlayGame.board);
+    const hh = PlayGame.addRandomTile(PlayGame.board);
+    console.log(hh);
   } else if (event.key === "ArrowRight") {
     // Arrow down key is pressed
-    console.log("Arrow right key is pressed!");
+    console.log(PlayGame.gameBoardArray);
+    PlayGame.moveBoard("PositiveX");
     PlayGame.addRandomTile(PlayGame.board);
   } else if (event.key === "ArrowLeft") {
     // Arrow down key is pressed
-    console.log("Arrow left key is pressed!");
     PlayGame.addRandomTile(PlayGame.board);
   }
 });
 
 class Game2048 {
   public board: HTMLDivElement[];
-  private firstRowX: number[] = [];
-  private secondRowX: number[] = [];
-  private thirdRowX: number[] = [];
-  private fourthRowX: number[] = [];
-  private fifthRowX: number[] = [];
-  private sixthRowX: number[] = [];
-
-  private firstRowY: number[] = [];
-  private secondRowY: number[] = [];
-  private thirdRowY: number[] = [];
-  private fourthRowY: number[] = [];
-  private fifthRowY: number[] = [];
-  private sixthRowY: number[] = [];
+  public gameBoardArray: string[] = new Array(gameGridsNumber);
 
   constructor() {
     body.innerHTML = "";
@@ -151,7 +138,11 @@ class Game2048 {
     return board;
   }
 
-  private findAxes(index: number, board: HTMLDivElement[]): number | false {
+  private findAxes(
+    index: number,
+    board: HTMLDivElement[],
+    direction: string
+  ): number | false {
     if ((index + 1) % 4 === 0) return false;
     const startBoardIndex = Math.floor(index / 4) + 1;
     const length = Math.floor(index / 4) + 4;
@@ -166,31 +157,91 @@ class Game2048 {
     return moveByAxes;
   }
 
-  public moveBoard(direction: string, axes: string) {
-    for (let i = 0; i < this.board.length; i++) {
-      if (this.board[i].textContent?.length !== 0) {
-        const moveBy = this.findAxes(i, this.board);
-        if (Number(moveBy) > 0) {
-          if (direction === "positive") {
-            if (axes === "X") {
-              const className = positiveXAxis[Number(moveBy)];
-              this.board[i].classList.add(className);
-            } else if (axes === "Y") {
-              const className = positiveYAxis[Number(moveBy)];
-              this.board[i].classList.add(className);
+  public moveBoard(direction: string) {
+    const cells = document.querySelectorAll(".body > div > span");
+    let angleNumber = "";
+    const squareNumber =
+      gameGridsNumber % 4 === 0
+        ? 4
+        : gameGridsNumber % 5 === 0
+        ? 5
+        : gameGridsNumber % 6 === 0
+        ? 6
+        : 0;
+    let positiveAxes = 0;
+    let noNumberFound = false;
+    if (direction === "PositiveX") {
+      let squareAngleNumber = squareNumber + 1;
+      for (let i = gameGridsNumber - 1; i > -1; i--) {
+        ///////////////////////////////////////////
+        if ((i + 1) % squareNumber === 0) {
+          angleNumber =
+            this.gameBoardArray[i] === undefined
+              ? "undefined"
+              : this.gameBoardArray[i];
+          squareAngleNumber--;
+          positiveAxes = 0;
+          noNumberFound = false;
+        }
+
+        ///////////////////////////////////////////
+
+        if (this.gameBoardArray[i] === undefined && !noNumberFound) {
+          noNumberFound = true;
+        }
+        ///////////////////////////////////////////
+        if (
+          this.gameBoardArray[i] !== undefined &&
+          noNumberFound &&
+          this.gameBoardArray[i] !== ""
+        ) {
+          if (angleNumber === "undefined") {
+            positiveAxes++;
+            this.gameBoardArray[
+              squareAngleNumber * squareNumber - positiveAxes
+            ] = this.gameBoardArray[i];
+            noNumberFound = false;
+
+            // console.log(
+            //   squareAngleNumber,
+            //   squareNumber,
+            //   positiveAxes,
+            //   i,
+            //   angleNumber,
+            //   this.gameBoardArray[i]
+            // );
+
+            angleNumber = this.gameBoardArray[i];
+            this.gameBoardArray[i] = "";
+            if (i - 1 > -1 && this.gameBoardArray[i - 1] !== undefined) {
+              positiveAxes++;
+              this.gameBoardArray[
+                squareAngleNumber * squareNumber - positiveAxes
+              ] = this.gameBoardArray[i];
+              // console.log(squareAngleNumber, squareNumber, positiveAxes, i);
             }
-          } else if (direction === "negative") {
-            if (axes === "X") {
-              const className = negativeXAxis[Number(moveBy)];
-              this.board[i].classList.add(className);
-            } else if (axes === "Y") {
-              const className = negativeYAxis[Number(moveBy)];
-              this.board[i].classList.add(className);
-            }
+          } else if (angleNumber !== this.gameBoardArray[i]) {
+            // console.log(
+            //   "what number",
+            //   angleNumber,
+            //   this.gameBoardArray[i],
+            //   noNumberFound
+            // );
+            positiveAxes++;
+            noNumberFound = false;
+            this.gameBoardArray[
+              squareAngleNumber * squareNumber - positiveAxes
+            ] = this.gameBoardArray[i];
+          } else if (angleNumber === this.gameBoardArray[i]) {
+            // console.log(angleNumber, i, this.gameBoardArray[i]);
+            this.gameBoardArray[i] = "";
           }
         }
       }
     }
+    console.log("0000", this.gameBoardArray);
+
+    // this.addRandomTile(PlayGame.board);
   }
 
   public addRandomTile(cells: HTMLDivElement[]) {
@@ -202,9 +253,11 @@ class Game2048 {
         emptyCells[Math.floor(Math.random() * emptyCells.length)];
       const newValue = Math.random() < 0.9 ? 2 : 4; // 90% chance of 2, 10% chance of 4
       randomCell.textContent = newValue.toString();
+      this.gameBoardArray[Number(randomCell.id)] = newValue.toString();
+      console.log("1111", this.gameBoardArray);
+
       if (newValue === 2) {
         randomCell.classList.add("two");
-        console.log(randomCell.classList.value);
       } else if (newValue === 4) {
         randomCell.classList.add("four");
       }
@@ -215,6 +268,7 @@ class Game2048 {
     for (let i = 0; i < gameGridsNumber; i++) {
       const newDivElement = document.createElement("div");
       const newSpanElement = document.createElement("span");
+      newSpanElement.id = `${i}`;
       newDivElement.appendChild(newSpanElement);
       body.appendChild(newDivElement);
     }
@@ -222,7 +276,3 @@ class Game2048 {
 }
 
 const PlayGame = new Game2048();
-
-console.log(PlayGame.board);
-
-console.log(PlayGame.board[0].textContent?.length === 0);

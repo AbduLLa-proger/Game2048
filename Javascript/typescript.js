@@ -1,5 +1,4 @@
 "use strict";
-var _a;
 var leftArrow = document.querySelector(".left-arrow");
 var rightArrow = document.querySelector(".right-arrow");
 var numberOfGrids = document.querySelector(".grids");
@@ -85,39 +84,27 @@ newGame.addEventListener("click", function () {
 document.addEventListener("keydown", function (event) {
     if (event.key === "ArrowDown") {
         // Arrow down key is pressed
-        console.log("Arrow down key is pressed!");
         PlayGame.addRandomTile(PlayGame.board);
     }
     else if (event.key === "ArrowUp") {
         // Arrow down key is pressed
-        console.log("Arrow up key is pressed!");
-        PlayGame.addRandomTile(PlayGame.board);
+        var hh = PlayGame.addRandomTile(PlayGame.board);
+        console.log(hh);
     }
     else if (event.key === "ArrowRight") {
         // Arrow down key is pressed
-        console.log("Arrow right key is pressed!");
+        console.log(PlayGame.gameBoardArray);
+        PlayGame.moveBoard("PositiveX");
         PlayGame.addRandomTile(PlayGame.board);
     }
     else if (event.key === "ArrowLeft") {
         // Arrow down key is pressed
-        console.log("Arrow left key is pressed!");
         PlayGame.addRandomTile(PlayGame.board);
     }
 });
 var Game2048 = /** @class */ (function () {
     function Game2048() {
-        this.firstRowX = [];
-        this.secondRowX = [];
-        this.thirdRowX = [];
-        this.fourthRowX = [];
-        this.fifthRowX = [];
-        this.sixthRowX = [];
-        this.firstRowY = [];
-        this.secondRowY = [];
-        this.thirdRowY = [];
-        this.fourthRowY = [];
-        this.fifthRowY = [];
-        this.sixthRowY = [];
+        this.gameBoardArray = new Array(gameGridsNumber);
         body.innerHTML = "";
         this.play();
         this.board = this.initializeBoard();
@@ -133,7 +120,7 @@ var Game2048 = /** @class */ (function () {
         this.addRandomTile(board);
         return board;
     };
-    Game2048.prototype.findAxes = function (index, board) {
+    Game2048.prototype.findAxes = function (index, board, direction) {
         var _a;
         if ((index + 1) % 4 === 0)
             return false;
@@ -147,35 +134,79 @@ var Game2048 = /** @class */ (function () {
         }
         return moveByAxes;
     };
-    Game2048.prototype.moveBoard = function (direction, axes) {
-        var _a;
-        for (var i = 0; i < this.board.length; i++) {
-            if (((_a = this.board[i].textContent) === null || _a === void 0 ? void 0 : _a.length) !== 0) {
-                var moveBy_1 = this.findAxes(i, this.board);
-                if (Number(moveBy_1) > 0) {
-                    if (direction === "positive") {
-                        if (axes === "X") {
-                            var className = positiveXAxis[Number(moveBy_1)];
-                            this.board[i].classList.add(className);
-                        }
-                        else if (axes === "Y") {
-                            var className = positiveYAxis[Number(moveBy_1)];
-                            this.board[i].classList.add(className);
+    Game2048.prototype.moveBoard = function (direction) {
+        var cells = document.querySelectorAll(".body > div > span");
+        var angleNumber = "";
+        var squareNumber = gameGridsNumber % 4 === 0
+            ? 4
+            : gameGridsNumber % 5 === 0
+                ? 5
+                : gameGridsNumber % 6 === 0
+                    ? 6
+                    : 0;
+        var positiveAxes = 0;
+        var noNumberFound = false;
+        if (direction === "PositiveX") {
+            var squareAngleNumber = squareNumber + 1;
+            for (var i = gameGridsNumber - 1; i > -1; i--) {
+                ///////////////////////////////////////////
+                if ((i + 1) % squareNumber === 0) {
+                    angleNumber =
+                        this.gameBoardArray[i] === undefined
+                            ? "undefined"
+                            : this.gameBoardArray[i];
+                    squareAngleNumber--;
+                    positiveAxes = 0;
+                    noNumberFound = false;
+                }
+                ///////////////////////////////////////////
+                if (this.gameBoardArray[i] === undefined && !noNumberFound) {
+                    noNumberFound = true;
+                }
+                ///////////////////////////////////////////
+                if (this.gameBoardArray[i] !== undefined &&
+                    noNumberFound &&
+                    this.gameBoardArray[i] !== "") {
+                    if (angleNumber === "undefined") {
+                        positiveAxes++;
+                        this.gameBoardArray[squareAngleNumber * squareNumber - positiveAxes] = this.gameBoardArray[i];
+                        noNumberFound = false;
+                        // console.log(
+                        //   squareAngleNumber,
+                        //   squareNumber,
+                        //   positiveAxes,
+                        //   i,
+                        //   angleNumber,
+                        //   this.gameBoardArray[i]
+                        // );
+                        angleNumber = this.gameBoardArray[i];
+                        this.gameBoardArray[i] = "";
+                        if (i - 1 > -1 && this.gameBoardArray[i - 1] !== undefined) {
+                            positiveAxes++;
+                            this.gameBoardArray[squareAngleNumber * squareNumber - positiveAxes] = this.gameBoardArray[i];
+                            // console.log(squareAngleNumber, squareNumber, positiveAxes, i);
                         }
                     }
-                    else if (direction === "negative") {
-                        if (axes === "X") {
-                            var className = negativeXAxis[Number(moveBy_1)];
-                            this.board[i].classList.add(className);
-                        }
-                        else if (axes === "Y") {
-                            var className = negativeYAxis[Number(moveBy_1)];
-                            this.board[i].classList.add(className);
-                        }
+                    else if (angleNumber !== this.gameBoardArray[i]) {
+                        // console.log(
+                        //   "what number",
+                        //   angleNumber,
+                        //   this.gameBoardArray[i],
+                        //   noNumberFound
+                        // );
+                        positiveAxes++;
+                        noNumberFound = false;
+                        this.gameBoardArray[squareAngleNumber * squareNumber - positiveAxes] = this.gameBoardArray[i];
+                    }
+                    else if (angleNumber === this.gameBoardArray[i]) {
+                        // console.log(angleNumber, i, this.gameBoardArray[i]);
+                        this.gameBoardArray[i] = "";
                     }
                 }
             }
         }
+        console.log("0000", this.gameBoardArray);
+        // this.addRandomTile(PlayGame.board);
     };
     Game2048.prototype.addRandomTile = function (cells) {
         // Check if the cell is empty
@@ -184,9 +215,10 @@ var Game2048 = /** @class */ (function () {
             var randomCell = emptyCells[Math.floor(Math.random() * emptyCells.length)];
             var newValue = Math.random() < 0.9 ? 2 : 4; // 90% chance of 2, 10% chance of 4
             randomCell.textContent = newValue.toString();
+            this.gameBoardArray[Number(randomCell.id)] = newValue.toString();
+            console.log("1111", this.gameBoardArray);
             if (newValue === 2) {
                 randomCell.classList.add("two");
-                console.log(randomCell.classList.value);
             }
             else if (newValue === 4) {
                 randomCell.classList.add("four");
@@ -197,6 +229,7 @@ var Game2048 = /** @class */ (function () {
         for (var i = 0; i < gameGridsNumber; i++) {
             var newDivElement = document.createElement("div");
             var newSpanElement = document.createElement("span");
+            newSpanElement.id = "".concat(i);
             newDivElement.appendChild(newSpanElement);
             body.appendChild(newDivElement);
         }
@@ -204,6 +237,4 @@ var Game2048 = /** @class */ (function () {
     return Game2048;
 }());
 var PlayGame = new Game2048();
-console.log(PlayGame.board);
-console.log(((_a = PlayGame.board[0].textContent) === null || _a === void 0 ? void 0 : _a.length) === 0);
 //# sourceMappingURL=typescript.js.map

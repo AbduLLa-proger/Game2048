@@ -12,6 +12,8 @@
     "strictFunctionTypes": true,
     "noImplicitThis": true,
     "strictBindCallApply": true,
+    "allowUnusedLabels": false,
+    "allowUnreachableCode": false,
 
     "noPropertyAccessFromIndexSignature": true,
     "noImplicitReturns": true,
