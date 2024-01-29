@@ -5,10 +5,14 @@ var numberOfGrids = document.querySelector(".grids");
 var startGame = document.querySelector(".start-game");
 var newGame = document.querySelector(".new-game");
 var body = document.querySelector(".body");
+var currentScore = document.querySelector(".current-score");
+var bestScore = document.querySelector(".best-score");
+var mainBody = document.body;
 var gridsNumber = 16;
 var gameGridsNumber = 16;
 var gridsAddClassNameCounter = 0;
 var gridsRemoveClassNameCounter = 0;
+var gameOver = false;
 var offsetXY = {
     0: 0,
     1: 129,
@@ -75,41 +79,102 @@ startGame.addEventListener("click", function () {
         body.classList.add(gridsClassNames[gridsAddClassNameCounter]);
         gridsRemoveClassNameCounter = gridsAddClassNameCounter;
         gameGridsNumber = gridsNumber;
-        new Game2048();
+        new PlayGame2048();
     }
 });
 newGame.addEventListener("click", function () {
-    new Game2048();
+    gameOver = false;
+    mainBody.classList.value = "";
+    PlayGame = new PlayGame2048();
 });
 document.addEventListener("keydown", function (event) {
-    if (event.key === "ArrowDown") {
-        // Arrow down key is pressed
-        PlayGame.addRandomTile(PlayGame.board);
-    }
-    else if (event.key === "ArrowUp") {
-        // Arrow down key is pressed
-        var hh = PlayGame.addRandomTile(PlayGame.board);
-        console.log(hh);
-    }
-    else if (event.key === "ArrowRight") {
-        // Arrow down key is pressed
-        console.log(PlayGame.gameBoardArray);
-        PlayGame.moveBoard("PositiveX");
-        PlayGame.addRandomTile(PlayGame.board);
-    }
-    else if (event.key === "ArrowLeft") {
-        // Arrow down key is pressed
-        PlayGame.addRandomTile(PlayGame.board);
+    if (!gameOver) {
+        if (event.key === "ArrowDown") {
+            // Arrow down key is pressed
+            PlayGame.addRandomTile(PlayGame.board);
+        }
+        else if (event.key === "ArrowUp") {
+            // Arrow down key is pressed
+            var hh = PlayGame.addRandomTile(PlayGame.board);
+        }
+        else if (event.key === "ArrowRight") {
+            // Arrow down key is pressed
+            // PlayGame.moveBoard("PositiveX");
+            PlayGame.slideRight();
+            PlayGame.addRandomTile(PlayGame.board);
+        }
+        else if (event.key === "ArrowLeft") {
+            // Arrow down key is pressed
+            PlayGame.slideLeft();
+            PlayGame.addRandomTile(PlayGame.board);
+        }
     }
 });
-var Game2048 = /** @class */ (function () {
-    function Game2048() {
-        this.gameBoardArray = new Array(gameGridsNumber);
+var PlayGame2048 = /** @class */ (function () {
+    function PlayGame2048() {
+        var _this = this;
+        this.gameScore = 0;
+        this.gameBoard = [
+            [0, 0, 0, 0],
+            [0, 0, 0, 0],
+            [0, 0, 0, 0],
+            [0, 0, 0, 0],
+        ];
+        this.gameSquareNumber = gameGridsNumber % 4 === 0
+            ? 4
+            : gameGridsNumber % 5 === 0
+                ? 5
+                : gameGridsNumber % 6 === 0
+                    ? 6
+                    : 4;
+        this.getClassName = function (num) {
+            switch (num) {
+                case 2:
+                    return "two";
+                case 4:
+                    return "four";
+                case 8:
+                    return "eight";
+                case 16:
+                    return "six-teen";
+                case 32:
+                    return "thirty-two";
+                case 64:
+                    return "sixty-four";
+                case 128:
+                    return "one-two-eight";
+                case 256:
+                    return "two-five-six";
+                case 512:
+                    return "five-one-two";
+                case 1024:
+                    return "ten-two-four";
+                case 2048:
+                    return "twenty-four-eight";
+                default:
+                    return "";
+            }
+        };
+        this.updateTile = function (boardElement, num) {
+            var className = _this.getClassName(num);
+            boardElement.innerText = "".concat(num);
+            boardElement.classList.value = "";
+            boardElement.classList.add(className);
+            if (num === 4096) {
+                gameOver = true;
+                mainBody.classList.add("game-over");
+            }
+        };
+        this.getNumberOfRow = function (index, direction) {
+            return (index === 0 && direction === "left") ||
+                index % _this.gameSquareNumber === 0 ||
+                (index === gameGridsNumber && direction === "right");
+        };
         body.innerHTML = "";
         this.play();
         this.board = this.initializeBoard();
     }
-    Game2048.prototype.initializeBoard = function () {
+    PlayGame2048.prototype.initializeBoard = function () {
         var board = [];
         // Select all grid cells within the body-four-column container
         var cells = document.querySelectorAll(".body > div > span");
@@ -120,103 +185,93 @@ var Game2048 = /** @class */ (function () {
         this.addRandomTile(board);
         return board;
     };
-    Game2048.prototype.findAxes = function (index, board, direction) {
-        var _a;
-        if ((index + 1) % 4 === 0)
-            return false;
-        var startBoardIndex = Math.floor(index / 4) + 1;
-        var length = Math.floor(index / 4) + 4;
-        var moveByAxes = 0;
-        for (var i = 4 * startBoardIndex; i < length; i++) {
-            if (((_a = board[i].textContent) === null || _a === void 0 ? void 0 : _a.length) === 0) {
-                moveByAxes++;
-            }
-        }
-        return moveByAxes;
+    PlayGame2048.prototype.filterZero = function (row) {
+        return row.filter(function (num) { return num != 0; }); //create new array of all nums != 0
     };
-    Game2048.prototype.moveBoard = function (direction) {
-        var cells = document.querySelectorAll(".body > div > span");
-        var angleNumber = "";
-        var squareNumber = gameGridsNumber % 4 === 0
-            ? 4
-            : gameGridsNumber % 5 === 0
-                ? 5
-                : gameGridsNumber % 6 === 0
-                    ? 6
-                    : 0;
-        var positiveAxes = 0;
-        var noNumberFound = false;
-        if (direction === "PositiveX") {
-            var squareAngleNumber = squareNumber + 1;
-            for (var i = gameGridsNumber - 1; i > -1; i--) {
-                ///////////////////////////////////////////
-                if ((i + 1) % squareNumber === 0) {
-                    angleNumber =
-                        this.gameBoardArray[i] === undefined
-                            ? "undefined"
-                            : this.gameBoardArray[i];
-                    squareAngleNumber--;
-                    positiveAxes = 0;
-                    noNumberFound = false;
-                }
-                ///////////////////////////////////////////
-                if (this.gameBoardArray[i] === undefined && !noNumberFound) {
-                    noNumberFound = true;
-                }
-                ///////////////////////////////////////////
-                if (this.gameBoardArray[i] !== undefined &&
-                    noNumberFound &&
-                    this.gameBoardArray[i] !== "") {
-                    if (angleNumber === "undefined") {
-                        positiveAxes++;
-                        this.gameBoardArray[squareAngleNumber * squareNumber - positiveAxes] = this.gameBoardArray[i];
-                        noNumberFound = false;
-                        // console.log(
-                        //   squareAngleNumber,
-                        //   squareNumber,
-                        //   positiveAxes,
-                        //   i,
-                        //   angleNumber,
-                        //   this.gameBoardArray[i]
-                        // );
-                        angleNumber = this.gameBoardArray[i];
-                        this.gameBoardArray[i] = "";
-                        if (i - 1 > -1 && this.gameBoardArray[i - 1] !== undefined) {
-                            positiveAxes++;
-                            this.gameBoardArray[squareAngleNumber * squareNumber - positiveAxes] = this.gameBoardArray[i];
-                            // console.log(squareAngleNumber, squareNumber, positiveAxes, i);
-                        }
-                    }
-                    else if (angleNumber !== this.gameBoardArray[i]) {
-                        // console.log(
-                        //   "what number",
-                        //   angleNumber,
-                        //   this.gameBoardArray[i],
-                        //   noNumberFound
-                        // );
-                        positiveAxes++;
-                        noNumberFound = false;
-                        this.gameBoardArray[squareAngleNumber * squareNumber - positiveAxes] = this.gameBoardArray[i];
-                    }
-                    else if (angleNumber === this.gameBoardArray[i]) {
-                        // console.log(angleNumber, i, this.gameBoardArray[i]);
-                        this.gameBoardArray[i] = "";
-                    }
-                }
+    PlayGame2048.prototype.slide = function (row) {
+        //[0, 2, 2, 2]
+        var filteredRow = this.filterZero(row); //[2, 2, 2]
+        for (var i = 0; i < filteredRow.length - 1; i++) {
+            if (filteredRow[i] === filteredRow[i + 1]) {
+                filteredRow[i] *= 2;
+                filteredRow[i + 1] = 0;
+                this.gameScore += filteredRow[i];
+                currentScore.innerText = "".concat(this.gameScore);
             }
+        } //[4, 0, 2]
+        var afterMoveRow = this.filterZero(filteredRow); //[4, 2]
+        //add zeroes
+        while (afterMoveRow.length < this.gameSquareNumber) {
+            afterMoveRow.push(0);
         }
-        console.log("0000", this.gameBoardArray);
-        // this.addRandomTile(PlayGame.board);
+        //[4, 2, 0, 0]
+        return afterMoveRow;
     };
-    Game2048.prototype.addRandomTile = function (cells) {
+    PlayGame2048.prototype.slideLeft = function () {
+        var firstArray = 0;
+        var secondArray = 0;
+        for (var i = 0; i < gameGridsNumber; i++) {
+            if (this.getNumberOfRow(i, "left")) {
+                secondArray = 0;
+                firstArray = i === 0 ? firstArray : ++firstArray;
+                var row = this.gameBoard[firstArray];
+                var newRow = this.slide(row);
+                this.gameBoard[firstArray] = newRow;
+            }
+            var boardElement = document.getElementById("".concat(i));
+            var num = this.gameBoard[firstArray][secondArray];
+            if (num > 0) {
+                this.updateTile(boardElement, num);
+            }
+            else {
+                boardElement.classList.value = "";
+                boardElement.innerText = "";
+            }
+            secondArray++;
+        }
+    };
+    PlayGame2048.prototype.slideRight = function () {
+        var firstArray = this.gameSquareNumber - 1;
+        var secondArray = 0;
+        for (var i = gameGridsNumber - 1; i > -1; i--) {
+            if (this.getNumberOfRow(i + 1, "right")) {
+                secondArray = this.gameSquareNumber - 1;
+                firstArray = i + 1 === gameGridsNumber ? firstArray : --firstArray;
+                var row = this.gameBoard[firstArray];
+                var newRow = this.slide(row);
+                this.gameBoard[firstArray] = newRow;
+                console.log("new new enw new", row, firstArray);
+                console.log("new row", newRow);
+                //console.log("firstArray", firstArray);
+                //console.log("this.gameBoard[firstArray]", this.gameBoard[firstArray]);
+            }
+            var boardElement = document.getElementById("".concat(i));
+            var num = this.gameBoard[firstArray][secondArray];
+            if (num > 0) {
+                this.updateTile(boardElement, num);
+                console.log("boardElement", boardElement);
+                console.log("num", num);
+            }
+            else {
+                boardElement.classList.value = "";
+                boardElement.innerText = "";
+            }
+            secondArray--;
+        }
+    };
+    PlayGame2048.prototype.addRandomTile = function (cells) {
         // Check if the cell is empty
         var emptyCells = cells.filter(function (cell) { return !cell.textContent; });
         if (emptyCells.length > 0) {
             var randomCell = emptyCells[Math.floor(Math.random() * emptyCells.length)];
             var newValue = Math.random() < 0.9 ? 2 : 4; // 90% chance of 2, 10% chance of 4
-            randomCell.textContent = newValue.toString();
-            this.gameBoardArray[Number(randomCell.id)] = newValue.toString();
-            console.log("1111", this.gameBoardArray);
+            randomCell.textContent = "".concat(newValue);
+            var gameArrayNumber = (Number(randomCell.id) + 1) % 4 === 0
+                ? Number(randomCell.id) - 1
+                : Number(randomCell.id);
+            var gameArrayColumn = Math.floor(gameArrayNumber / 4);
+            var gameArrayRow = Number(randomCell.id) - gameArrayColumn * this.gameSquareNumber;
+            this.gameBoard[gameArrayColumn][gameArrayRow] = newValue;
             if (newValue === 2) {
                 randomCell.classList.add("two");
             }
@@ -224,8 +279,12 @@ var Game2048 = /** @class */ (function () {
                 randomCell.classList.add("four");
             }
         }
+        else {
+            mainBody.classList.add("game-over");
+            gameOver = true;
+        }
     };
-    Game2048.prototype.play = function () {
+    PlayGame2048.prototype.play = function () {
         for (var i = 0; i < gameGridsNumber; i++) {
             var newDivElement = document.createElement("div");
             var newSpanElement = document.createElement("span");
@@ -234,7 +293,7 @@ var Game2048 = /** @class */ (function () {
             body.appendChild(newDivElement);
         }
     };
-    return Game2048;
+    return PlayGame2048;
 }());
-var PlayGame = new Game2048();
+var PlayGame = new PlayGame2048();
 //# sourceMappingURL=typescript.js.map

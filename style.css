@@ -13,6 +13,7 @@ body {
   font-size: 10px;
   height: 100%;
   width: 100%;
+  font-family: Arial, Helvetica, sans-serif;
 }
 
 h1,
@@ -58,6 +59,7 @@ p {
   -moz-border-radius: 15px;
   -ms-border-radius: 15px;
   -o-border-radius: 15px;
+  font-weight: 500;
 }
 
 ::-webkit-input-placeholder {
@@ -161,8 +163,31 @@ input {
   width: 230px;
 }
 
-.score p {
+.score div {
   background: #bbada0;
+  border-radius: 20px;
+  -webkit-border-radius: 20px;
+  -moz-border-radius: 20px;
+  -ms-border-radius: 20px;
+  -o-border-radius: 20px;
+}
+
+.score p {
+  font-size: 18px;
+  padding: 10px;
+  padding-bottom: 5px;
+  border-radius: 0;
+  -webkit-border-radius: 0;
+  -moz-border-radius: 0;
+  -ms-border-radius: 0;
+  -o-border-radius: 0;
+}
+
+.score .current-score,
+.score .best-score {
+  padding-top: 5px;
+  font-size: 20px;
+  text-align: center;
 }
 
 .grids {
@@ -301,6 +326,39 @@ input {
 
 .twenty-four-eight {
   background: #eec22e;
+}
+
+.game-over .game-over-message {
+  display: block;
+}
+
+.game-over-message {
+  display: none;
+  background: white;
+  opacity: 0.4;
+  height: 540px;
+  width: 540px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  -webkit-transform: translate(-50%, -50%);
+  -ms-transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%);
+  z-index: 9999;
+}
+
+.game-over-message h1 {
+  height: 100%;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-pack: center;
+  -ms-flex-pack: center;
+  justify-content: center;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  font-size: 50px;
 }
 
 /* MOVE BY X */
