@@ -190,7 +190,7 @@ input {
   text-align: center;
 }
 
-.grids {
+.game-score {
   color: black;
   font-weight: 700;
   font-size: 22px;
@@ -216,7 +216,7 @@ input {
   grid-template-columns: auto auto auto auto auto;
 }
 .body-six-column {
-  grid-template-columns: auto auto auto auto auto;
+  grid-template-columns: auto auto auto auto auto auto;
 }
 .body-seven-column {
   grid-template-columns: auto auto auto auto auto auto;

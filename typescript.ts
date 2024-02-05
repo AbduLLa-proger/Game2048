@@ -1,6 +1,6 @@
 const leftArrow = document.querySelector(".left-arrow") as HTMLDivElement;
 const rightArrow = document.querySelector(".right-arrow") as HTMLDivElement;
-const numberOfGrids = document.querySelector(".grids") as HTMLDivElement;
+const gameScore = document.querySelector(".game-score") as HTMLDivElement;
 const startGame = document.querySelector(".start-game") as HTMLDivElement;
 const newGame = document.querySelector(".new-game") as HTMLDivElement;
 const body = document.querySelector(".body") as HTMLDivElement;
@@ -31,8 +31,8 @@ const numberOfCells: Record<number, number> = {
 
 const gridsClassNames: Record<number, string> = {
   0: "body-four-column",
-  1: "body-six-column",
-  2: "body-eight-column",
+  1: "body-five-column",
+  2: "body-six-column",
 };
 
 const positiveXAxis: Record<number, string> = {
@@ -68,17 +68,17 @@ const negativeYAxis: Record<number, string> = {
 };
 
 leftArrow.addEventListener("click", () => {
-  if (Number(numberOfGrids.textContent) > 16) {
+  if (Number(gameScore.textContent) > 16) {
     gridsAddClassNameCounter -= 1;
-    numberOfGrids.textContent = String(numberOfCells[gridsAddClassNameCounter]);
+    gameScore.textContent = String(numberOfCells[gridsAddClassNameCounter]);
     gridsNumber = numberOfCells[gridsAddClassNameCounter];
   }
 });
 
 rightArrow.addEventListener("click", () => {
-  if (Number(numberOfGrids.textContent) < 32) {
+  if (Number(gameScore.textContent) < 32) {
     gridsAddClassNameCounter += 1;
-    numberOfGrids.textContent = String(numberOfCells[gridsAddClassNameCounter]);
+    gameScore.textContent = String(numberOfCells[gridsAddClassNameCounter]);
     gridsNumber = numberOfCells[gridsAddClassNameCounter];
   }
 });
@@ -89,6 +89,7 @@ startGame.addEventListener("click", () => {
     body.classList.add(gridsClassNames[gridsAddClassNameCounter]);
     gridsRemoveClassNameCounter = gridsAddClassNameCounter;
     gameGridsNumber = gridsNumber;
+    mainBody.classList.value = "";
     new PlayGame2048();
   }
 });
@@ -103,13 +104,14 @@ document.addEventListener("keydown", (event: KeyboardEvent) => {
   if (!gameOver) {
     if (event.key === "ArrowDown") {
       // Arrow down key is pressed
+      PlayGame.slideDown();
       PlayGame.addRandomTile(PlayGame.board);
     } else if (event.key === "ArrowUp") {
       // Arrow down key is pressed
-      const hh = PlayGame.addRandomTile(PlayGame.board);
+      PlayGame.slideUp();
+      PlayGame.addRandomTile(PlayGame.board);
     } else if (event.key === "ArrowRight") {
       // Arrow down key is pressed
-      // PlayGame.moveBoard("PositiveX");
       PlayGame.slideRight();
       PlayGame.addRandomTile(PlayGame.board);
     } else if (event.key === "ArrowLeft") {
@@ -128,6 +130,7 @@ class PlayGame2048 {
     [0, 0, 0, 0],
     [0, 0, 0, 0],
   ];
+
   private gameSquareNumber =
     gameGridsNumber % 4 === 0
       ? 4
@@ -147,7 +150,6 @@ class PlayGame2048 {
   private initializeBoard(): HTMLDivElement[] {
     const board: HTMLDivElement[] = [];
 
-    // Select all grid cells within the body-four-column container
     const cells = document.querySelectorAll(".body > div > span");
 
     cells.forEach((cell: Element) => {
@@ -201,26 +203,40 @@ class PlayGame2048 {
   };
 
   private filterZero(row: number[]) {
-    return row.filter((num) => num != 0); //create new array of all nums != 0
+    return row.filter((num) => num !== 0); //create new array of all nums != 0
   }
 
-  private slide(row: number[]) {
-    //[0, 2, 2, 2]
-    const filteredRow = this.filterZero(row); //[2, 2, 2]
-    for (let i = 0; i < filteredRow.length - 1; i++) {
-      if (filteredRow[i] === filteredRow[i + 1]) {
+  private slide(row: number[], direction: string) {
+    const filteredRow = this.filterZero(row);
+    if (direction === "left") {
+      for (let i = 0; i < filteredRow.length - 1; i++) {
+        if (filteredRow[i] === filteredRow[i + 1]) {
+          filteredRow[i] *= 2;
+          filteredRow[i + 1] = 0;
+          this.gameScore += filteredRow[i];
+          currentScore.innerText = `${this.gameScore}`;
+        }
+      }
+      const afterMoveRow = this.filterZero(filteredRow);
+      while (afterMoveRow.length < this.gameSquareNumber) {
+        afterMoveRow.push(0);
+      }
+      return afterMoveRow;
+    }
+
+    for (let i = filteredRow.length - 1; i > 0; i--) {
+      if (filteredRow[i] === filteredRow[i - 1]) {
         filteredRow[i] *= 2;
-        filteredRow[i + 1] = 0;
+        filteredRow[i - 1] = 0;
         this.gameScore += filteredRow[i];
         currentScore.innerText = `${this.gameScore}`;
       }
-    } //[4, 0, 2]
-    const afterMoveRow = this.filterZero(filteredRow); //[4, 2]
-    //add zeroes
-    while (afterMoveRow.length < this.gameSquareNumber) {
-      afterMoveRow.push(0);
     }
-    //[4, 2, 0, 0]
+    const afterMoveRow = this.filterZero(filteredRow);
+
+    while (afterMoveRow.length < this.gameSquareNumber) {
+      afterMoveRow.unshift(0);
+    }
     return afterMoveRow;
   }
 
@@ -229,7 +245,34 @@ class PlayGame2048 {
     index % this.gameSquareNumber === 0 ||
     (index === gameGridsNumber && direction === "right");
 
-  public slideLeft() {
+  private getColumnArray = (column: number) => {
+    if (this.gameSquareNumber === 5) {
+      return [
+        this.gameBoard[0][column],
+        this.gameBoard[1][column],
+        this.gameBoard[2][column],
+        this.gameBoard[3][column],
+        this.gameBoard[4][column],
+      ];
+    } else if (this.gameSquareNumber === 6) {
+      return [
+        this.gameBoard[0][column],
+        this.gameBoard[1][column],
+        this.gameBoard[2][column],
+        this.gameBoard[3][column],
+        this.gameBoard[4][column],
+        this.gameBoard[5][column],
+      ];
+    }
+    return [
+      this.gameBoard[0][column],
+      this.gameBoard[1][column],
+      this.gameBoard[2][column],
+      this.gameBoard[3][column],
+    ];
+  };
+
+  public slideLeft = () => {
     let firstArray = 0;
     let secondArray = 0;
     for (let i = 0; i < gameGridsNumber; i++) {
@@ -237,7 +280,7 @@ class PlayGame2048 {
         secondArray = 0;
         firstArray = i === 0 ? firstArray : ++firstArray;
         const row = this.gameBoard[firstArray];
-        const newRow = this.slide(row);
+        const newRow = this.slide(row, "left");
         this.gameBoard[firstArray] = newRow;
       }
       const boardElement = document.getElementById(`${i}`) as HTMLDivElement;
@@ -250,9 +293,9 @@ class PlayGame2048 {
       }
       secondArray++;
     }
-  }
+  };
 
-  public slideRight() {
+  public slideRight = () => {
     let firstArray = this.gameSquareNumber - 1;
     let secondArray = 0;
     for (let i = gameGridsNumber - 1; i > -1; i--) {
@@ -260,26 +303,131 @@ class PlayGame2048 {
         secondArray = this.gameSquareNumber - 1;
         firstArray = i + 1 === gameGridsNumber ? firstArray : --firstArray;
         const row = this.gameBoard[firstArray];
-        const newRow = this.slide(row);
+        const newRow = this.slide(row, "right");
         this.gameBoard[firstArray] = newRow;
-        console.log("new new enw new", row, firstArray);
-        console.log("new row", newRow);
-        //console.log("firstArray", firstArray);
-        //console.log("this.gameBoard[firstArray]", this.gameBoard[firstArray]);
       }
       const boardElement = document.getElementById(`${i}`) as HTMLDivElement;
       const num = this.gameBoard[firstArray][secondArray];
       if (num > 0) {
         this.updateTile(boardElement, num);
-        console.log("boardElement", boardElement);
-        console.log("num", num);
       } else {
         boardElement.classList.value = "";
         boardElement.innerText = "";
       }
       secondArray--;
     }
-  }
+  };
+
+  public slideUp = () => {
+    let firstArray = 0;
+    let secondArray = 0;
+    let columnIndex = 0;
+    let tempArray: number[][] = [...this.gameBoard];
+    const isNumber = /[0-9]/;
+
+    for (let i = 0; i < this.gameSquareNumber; i++) {
+      const row = this.getColumnArray(i);
+      const newRow = this.slide(row, "left");
+      tempArray[i] = newRow;
+    }
+    this.gameBoard = tempArray;
+
+    for (let i = 0; i < gameGridsNumber; i++) {
+      if (this.getNumberOfRow(i, "left")) {
+        secondArray = 0;
+        firstArray = i === 0 ? firstArray : ++firstArray;
+      }
+      if (columnIndex % this.gameSquareNumber === 0) {
+        columnIndex = 0;
+      }
+      const idElement =
+        columnIndex === 0
+          ? columnIndex + firstArray
+          : firstArray + this.gameSquareNumber * columnIndex;
+      const boardElement = document.getElementById(
+        `${idElement}`
+      ) as HTMLDivElement;
+      const num = this.gameBoard[firstArray][secondArray];
+
+      if (num > 0) {
+        this.updateTile(boardElement, num);
+      } else {
+        boardElement.classList.value = "";
+        boardElement.innerText = "";
+      }
+      secondArray++;
+      columnIndex++;
+    }
+    for (let i = 0; i < gameGridsNumber; i++) {
+      if (this.getNumberOfRow(i, "left")) {
+        secondArray = 0;
+        firstArray = i === 0 ? 0 : ++firstArray;
+      }
+      const boardElement = document.getElementById(`${i}`) as HTMLDivElement;
+
+      const assignNumber = isNumber.test(boardElement.innerText)
+        ? boardElement.innerText
+        : 0;
+
+      this.gameBoard[firstArray][secondArray] = Number(assignNumber);
+      secondArray++;
+    }
+  };
+
+  public slideDown = () => {
+    let firstArray = 0;
+    let secondArray = 0;
+    let columnIndex = 0;
+    let tempArray: number[][] = [...this.gameBoard];
+    const isNumber = /[0-9]/;
+    for (let i = 0; i < this.gameSquareNumber; i++) {
+      const row = this.getColumnArray(i);
+      const newRow = this.slide(row, "right");
+      tempArray[i] = newRow;
+    }
+    this.gameBoard = tempArray;
+
+    for (let i = 0; i < gameGridsNumber; i++) {
+      if (this.getNumberOfRow(i, "left")) {
+        secondArray = 0;
+        firstArray = i === 0 ? firstArray : ++firstArray;
+      }
+      if (columnIndex % this.gameSquareNumber === 0) {
+        columnIndex = 0;
+      }
+      const idElement =
+        columnIndex === 0
+          ? columnIndex + firstArray
+          : firstArray + this.gameSquareNumber * columnIndex;
+      const boardElement = document.getElementById(
+        `${idElement}`
+      ) as HTMLDivElement;
+      const num = this.gameBoard[firstArray][secondArray];
+
+      if (num > 0) {
+        this.updateTile(boardElement, num);
+      } else {
+        boardElement.classList.value = "";
+        boardElement.innerText = "";
+      }
+      secondArray++;
+      columnIndex++;
+    }
+    for (let i = 0; i < gameGridsNumber; i++) {
+      if (this.getNumberOfRow(i, "left")) {
+        secondArray = 0;
+        firstArray = i === 0 ? 0 : ++firstArray;
+      }
+      const boardElement = document.getElementById(`${i}`) as HTMLDivElement;
+
+      const assignNumber = isNumber.test(boardElement.innerText)
+        ? boardElement.innerText
+        : 0;
+
+      this.gameBoard[firstArray][secondArray] = Number(assignNumber);
+      secondArray++;
+    }
+  };
 
   public addRandomTile(cells: HTMLDivElement[]) {
     // Check if the cell is empty
@@ -292,11 +440,13 @@ class PlayGame2048 {
       randomCell.textContent = `${newValue}`;
 
       const gameArrayNumber =
-        (Number(randomCell.id) + 1) % 4 === 0
+        (Number(randomCell.id) + 1) % this.gameSquareNumber === 0
           ? Number(randomCell.id) - 1
           : Number(randomCell.id);
 
-      const gameArrayColumn = Math.floor(gameArrayNumber / 4);
+      const gameArrayColumn = Math.floor(
+        gameArrayNumber / this.gameSquareNumber
+      );
       const gameArrayRow =
         Number(randomCell.id) - gameArrayColumn * this.gameSquareNumber;
 
@@ -321,7 +471,16 @@ class PlayGame2048 {
       newDivElement.appendChild(newSpanElement);
       body.appendChild(newDivElement);
     }
+    // if (this.gameSquareNumber === 4) {
+    //   this.gameBoard = [...this.fourBoard];
+    // } else if (this.gameSquareNumber === 5) {
+    //   this.gameBoard = [...this.fiveBoard];
+    // } else {
+    //   this.gameBoard = [...this.sixBoard];
+    // }
+    console.log("this.gameBoard", this.gameBoard);
   }
 }
 
+body.classList.add(gridsClassNames[gridsAddClassNameCounter]);
 let PlayGame = new PlayGame2048();

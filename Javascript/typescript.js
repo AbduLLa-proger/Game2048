@@ -1,7 +1,32 @@
 "use strict";
+var __read = (this && this.__read) || function (o, n) {
+    var m = typeof Symbol === "function" && o[Symbol.iterator];
+    if (!m) return o;
+    var i = m.call(o), r, ar = [], e;
+    try {
+        while ((n === void 0 || n-- > 0) && !(r = i.next()).done) ar.push(r.value);
+    }
+    catch (error) { e = { error: error }; }
+    finally {
+        try {
+            if (r && !r.done && (m = i["return"])) m.call(i);
+        }
+        finally { if (e) throw e.error; }
+    }
+    return ar;
+};
+var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
+    if (pack || arguments.length === 2) for (var i = 0, l = from.length, ar; i < l; i++) {
+        if (ar || !(i in from)) {
+            if (!ar) ar = Array.prototype.slice.call(from, 0, i);
+            ar[i] = from[i];
+        }
+    }
+    return to.concat(ar || Array.prototype.slice.call(from));
+};
 var leftArrow = document.querySelector(".left-arrow");
 var rightArrow = document.querySelector(".right-arrow");
-var numberOfGrids = document.querySelector(".grids");
+var gameScore = document.querySelector(".game-score");
 var startGame = document.querySelector(".start-game");
 var newGame = document.querySelector(".new-game");
 var body = document.querySelector(".body");
@@ -28,8 +53,8 @@ var numberOfCells = {
 };
 var gridsClassNames = {
     0: "body-four-column",
-    1: "body-six-column",
-    2: "body-eight-column",
+    1: "body-five-column",
+    2: "body-six-column",
 };
 var positiveXAxis = {
     1: "moveByXOnePos",
@@ -60,16 +85,16 @@ var negativeYAxis = {
     5: "moveByYFiveNeg",
 };
 leftArrow.addEventListener("click", function () {
-    if (Number(numberOfGrids.textContent) > 16) {
+    if (Number(gameScore.textContent) > 16) {
         gridsAddClassNameCounter -= 1;
-        numberOfGrids.textContent = String(numberOfCells[gridsAddClassNameCounter]);
+        gameScore.textContent = String(numberOfCells[gridsAddClassNameCounter]);
         gridsNumber = numberOfCells[gridsAddClassNameCounter];
     }
 });
 rightArrow.addEventListener("click", function () {
-    if (Number(numberOfGrids.textContent) < 32) {
+    if (Number(gameScore.textContent) < 32) {
         gridsAddClassNameCounter += 1;
-        numberOfGrids.textContent = String(numberOfCells[gridsAddClassNameCounter]);
+        gameScore.textContent = String(numberOfCells[gridsAddClassNameCounter]);
         gridsNumber = numberOfCells[gridsAddClassNameCounter];
     }
 });
@@ -79,6 +104,7 @@ startGame.addEventListener("click", function () {
         body.classList.add(gridsClassNames[gridsAddClassNameCounter]);
         gridsRemoveClassNameCounter = gridsAddClassNameCounter;
         gameGridsNumber = gridsNumber;
+        mainBody.classList.value = "";
         new PlayGame2048();
     }
 });
@@ -91,15 +117,16 @@ document.addEventListener("keydown", function (event) {
     if (!gameOver) {
         if (event.key === "ArrowDown") {
             // Arrow down key is pressed
+            PlayGame.slideDown();
             PlayGame.addRandomTile(PlayGame.board);
         }
         else if (event.key === "ArrowUp") {
             // Arrow down key is pressed
-            var hh = PlayGame.addRandomTile(PlayGame.board);
+            PlayGame.slideUp();
+            PlayGame.addRandomTile(PlayGame.board);
         }
         else if (event.key === "ArrowRight") {
             // Arrow down key is pressed
-            // PlayGame.moveBoard("PositiveX");
             PlayGame.slideRight();
             PlayGame.addRandomTile(PlayGame.board);
         }
@@ -170,13 +197,181 @@ var PlayGame2048 = /** @class */ (function () {
                 index % _this.gameSquareNumber === 0 ||
                 (index === gameGridsNumber && direction === "right");
         };
+        this.getColumnArray = function (column) {
+            if (_this.gameSquareNumber === 5) {
+                return [
+                    _this.gameBoard[0][column],
+                    _this.gameBoard[1][column],
+                    _this.gameBoard[2][column],
+                    _this.gameBoard[3][column],
+                    _this.gameBoard[4][column],
+                ];
+            }
+            else if (_this.gameSquareNumber === 6) {
+                return [
+                    _this.gameBoard[0][column],
+                    _this.gameBoard[1][column],
+                    _this.gameBoard[2][column],
+                    _this.gameBoard[3][column],
+                    _this.gameBoard[4][column],
+                    _this.gameBoard[5][column],
+                ];
+            }
+            return [
+                _this.gameBoard[0][column],
+                _this.gameBoard[1][column],
+                _this.gameBoard[2][column],
+                _this.gameBoard[3][column],
+            ];
+        };
+        this.slideLeft = function () {
+            var firstArray = 0;
+            var secondArray = 0;
+            for (var i = 0; i < gameGridsNumber; i++) {
+                if (_this.getNumberOfRow(i, "left")) {
+                    secondArray = 0;
+                    firstArray = i === 0 ? firstArray : ++firstArray;
+                    var row = _this.gameBoard[firstArray];
+                    var newRow = _this.slide(row, "left");
+                    _this.gameBoard[firstArray] = newRow;
+                }
+                var boardElement = document.getElementById("".concat(i));
+                var num = _this.gameBoard[firstArray][secondArray];
+                if (num > 0) {
+                    _this.updateTile(boardElement, num);
+                }
+                else {
+                    boardElement.classList.value = "";
+                    boardElement.innerText = "";
+                }
+                secondArray++;
+            }
+        };
+        this.slideRight = function () {
+            var firstArray = _this.gameSquareNumber - 1;
+            var secondArray = 0;
+            for (var i = gameGridsNumber - 1; i > -1; i--) {
+                if (_this.getNumberOfRow(i + 1, "right")) {
+                    secondArray = _this.gameSquareNumber - 1;
+                    firstArray = i + 1 === gameGridsNumber ? firstArray : --firstArray;
+                    var row = _this.gameBoard[firstArray];
+                    var newRow = _this.slide(row, "right");
+                    _this.gameBoard[firstArray] = newRow;
+                }
+                var boardElement = document.getElementById("".concat(i));
+                var num = _this.gameBoard[firstArray][secondArray];
+                if (num > 0) {
+                    _this.updateTile(boardElement, num);
+                }
+                else {
+                    boardElement.classList.value = "";
+                    boardElement.innerText = "";
+                }
+                secondArray--;
+            }
+        };
+        this.slideUp = function () {
+            var firstArray = 0;
+            var secondArray = 0;
+            var columnIndex = 0;
+            var tempArray = __spreadArray([], __read(_this.gameBoard), false);
+            var isNumber = /[0-9]/;
+            for (var i = 0; i < _this.gameSquareNumber; i++) {
+                var row = _this.getColumnArray(i);
+                var newRow = _this.slide(row, "left");
+                tempArray[i] = newRow;
+            }
+            _this.gameBoard = tempArray;
+            for (var i = 0; i < gameGridsNumber; i++) {
+                if (_this.getNumberOfRow(i, "left")) {
+                    secondArray = 0;
+                    firstArray = i === 0 ? firstArray : ++firstArray;
+                }
+                if (columnIndex % _this.gameSquareNumber === 0) {
+                    columnIndex = 0;
+                }
+                var idElement = columnIndex === 0
+                    ? columnIndex + firstArray
+                    : firstArray + _this.gameSquareNumber * columnIndex;
+                var boardElement = document.getElementById("".concat(idElement));
+                var num = _this.gameBoard[firstArray][secondArray];
+                if (num > 0) {
+                    _this.updateTile(boardElement, num);
+                }
+                else {
+                    boardElement.classList.value = "";
+                    boardElement.innerText = "";
+                }
+                secondArray++;
+                columnIndex++;
+            }
+            for (var i = 0; i < gameGridsNumber; i++) {
+                if (_this.getNumberOfRow(i, "left")) {
+                    secondArray = 0;
+                    firstArray = i === 0 ? 0 : ++firstArray;
+                }
+                var boardElement = document.getElementById("".concat(i));
+                var assignNumber = isNumber.test(boardElement.innerText)
+                    ? boardElement.innerText
+                    : 0;
+                _this.gameBoard[firstArray][secondArray] = Number(assignNumber);
+                secondArray++;
+            }
+        };
+        this.slideDown = function () {
+            var firstArray = 0;
+            var secondArray = 0;
+            var columnIndex = 0;
+            var tempArray = __spreadArray([], __read(_this.gameBoard), false);
+            var isNumber = /[0-9]/;
+            for (var i = 0; i < _this.gameSquareNumber; i++) {
+                var row = _this.getColumnArray(i);
+                var newRow = _this.slide(row, "right");
+                tempArray[i] = newRow;
+            }
+            _this.gameBoard = tempArray;
+            for (var i = 0; i < gameGridsNumber; i++) {
+                if (_this.getNumberOfRow(i, "left")) {
+                    secondArray = 0;
+                    firstArray = i === 0 ? firstArray : ++firstArray;
+                }
+                if (columnIndex % _this.gameSquareNumber === 0) {
+                    columnIndex = 0;
+                }
+                var idElement = columnIndex === 0
+                    ? columnIndex + firstArray
+                    : firstArray + _this.gameSquareNumber * columnIndex;
+                var boardElement = document.getElementById("".concat(idElement));
+                var num = _this.gameBoard[firstArray][secondArray];
+                if (num > 0) {
+                    _this.updateTile(boardElement, num);
+                }
+                else {
+                    boardElement.classList.value = "";
+                    boardElement.innerText = "";
+                }
+                secondArray++;
+                columnIndex++;
+            }
+            for (var i = 0; i < gameGridsNumber; i++) {
+                if (_this.getNumberOfRow(i, "left")) {
+                    secondArray = 0;
+                    firstArray = i === 0 ? 0 : ++firstArray;
+                }
+                var boardElement = document.getElementById("".concat(i));
+                var assignNumber = isNumber.test(boardElement.innerText)
+                    ? boardElement.innerText
+                    : 0;
+                _this.gameBoard[firstArray][secondArray] = Number(assignNumber);
+                secondArray++;
+            }
+        };
         body.innerHTML = "";
         this.play();
         this.board = this.initializeBoard();
     }
     PlayGame2048.prototype.initializeBoard = function () {
         var board = [];
-        // Select all grid cells within the body-four-column container
         var cells = document.querySelectorAll(".body > div > span");
         cells.forEach(function (cell) {
             board.push(cell);
@@ -186,78 +381,38 @@ var PlayGame2048 = /** @class */ (function () {
         return board;
     };
     PlayGame2048.prototype.filterZero = function (row) {
-        return row.filter(function (num) { return num != 0; }); //create new array of all nums != 0
+        return row.filter(function (num) { return num !== 0; }); //create new array of all nums != 0
     };
-    PlayGame2048.prototype.slide = function (row) {
-        //[0, 2, 2, 2]
-        var filteredRow = this.filterZero(row); //[2, 2, 2]
-        for (var i = 0; i < filteredRow.length - 1; i++) {
-            if (filteredRow[i] === filteredRow[i + 1]) {
+    PlayGame2048.prototype.slide = function (row, direction) {
+        var filteredRow = this.filterZero(row);
+        if (direction === "left") {
+            for (var i = 0; i < filteredRow.length - 1; i++) {
+                if (filteredRow[i] === filteredRow[i + 1]) {
+                    filteredRow[i] *= 2;
+                    filteredRow[i + 1] = 0;
+                    this.gameScore += filteredRow[i];
+                    currentScore.innerText = "".concat(this.gameScore);
+                }
+            }
+            var afterMoveRow_1 = this.filterZero(filteredRow);
+            while (afterMoveRow_1.length < this.gameSquareNumber) {
+                afterMoveRow_1.push(0);
+            }
+            return afterMoveRow_1;
+        }
+        for (var i = filteredRow.length - 1; i > 0; i--) {
+            if (filteredRow[i] === filteredRow[i - 1]) {
                 filteredRow[i] *= 2;
-                filteredRow[i + 1] = 0;
+                filteredRow[i - 1] = 0;
                 this.gameScore += filteredRow[i];
                 currentScore.innerText = "".concat(this.gameScore);
             }
-        } //[4, 0, 2]
-        var afterMoveRow = this.filterZero(filteredRow); //[4, 2]
-        //add zeroes
+        }
+        var afterMoveRow = this.filterZero(filteredRow);
         while (afterMoveRow.length < this.gameSquareNumber) {
-            afterMoveRow.push(0);
+            afterMoveRow.unshift(0);
         }
-        //[4, 2, 0, 0]
         return afterMoveRow;
-    };
-    PlayGame2048.prototype.slideLeft = function () {
-        var firstArray = 0;
-        var secondArray = 0;
-        for (var i = 0; i < gameGridsNumber; i++) {
-            if (this.getNumberOfRow(i, "left")) {
-                secondArray = 0;
-                firstArray = i === 0 ? firstArray : ++firstArray;
-                var row = this.gameBoard[firstArray];
-                var newRow = this.slide(row);
-                this.gameBoard[firstArray] = newRow;
-            }
-            var boardElement = document.getElementById("".concat(i));
-            var num = this.gameBoard[firstArray][secondArray];
-            if (num > 0) {
-                this.updateTile(boardElement, num);
-            }
-            else {
-                boardElement.classList.value = "";
-                boardElement.innerText = "";
-            }
-            secondArray++;
-        }
-    };
-    PlayGame2048.prototype.slideRight = function () {
-        var firstArray = this.gameSquareNumber - 1;
-        var secondArray = 0;
-        for (var i = gameGridsNumber - 1; i > -1; i--) {
-            if (this.getNumberOfRow(i + 1, "right")) {
-                secondArray = this.gameSquareNumber - 1;
-                firstArray = i + 1 === gameGridsNumber ? firstArray : --firstArray;
-                var row = this.gameBoard[firstArray];
-                var newRow = this.slide(row);
-                this.gameBoard[firstArray] = newRow;
-                console.log("new new enw new", row, firstArray);
-                console.log("new row", newRow);
-                //console.log("firstArray", firstArray);
-                //console.log("this.gameBoard[firstArray]", this.gameBoard[firstArray]);
-            }
-            var boardElement = document.getElementById("".concat(i));
-            var num = this.gameBoard[firstArray][secondArray];
-            if (num > 0) {
-                this.updateTile(boardElement, num);
-                console.log("boardElement", boardElement);
-                console.log("num", num);
-            }
-            else {
-                boardElement.classList.value = "";
-                boardElement.innerText = "";
-            }
-            secondArray--;
-        }
     };
     PlayGame2048.prototype.addRandomTile = function (cells) {
         // Check if the cell is empty
@@ -266,10 +421,10 @@ var PlayGame2048 = /** @class */ (function () {
             var randomCell = emptyCells[Math.floor(Math.random() * emptyCells.length)];
             var newValue = Math.random() < 0.9 ? 2 : 4; // 90% chance of 2, 10% chance of 4
             randomCell.textContent = "".concat(newValue);
-            var gameArrayNumber = (Number(randomCell.id) + 1) % 4 === 0
+            var gameArrayNumber = (Number(randomCell.id) + 1) % this.gameSquareNumber === 0
                 ? Number(randomCell.id) - 1
                 : Number(randomCell.id);
-            var gameArrayColumn = Math.floor(gameArrayNumber / 4);
+            var gameArrayColumn = Math.floor(gameArrayNumber / this.gameSquareNumber);
             var gameArrayRow = Number(randomCell.id) - gameArrayColumn * this.gameSquareNumber;
             this.gameBoard[gameArrayColumn][gameArrayRow] = newValue;
             if (newValue === 2) {
@@ -292,8 +447,17 @@ var PlayGame2048 = /** @class */ (function () {
             newDivElement.appendChild(newSpanElement);
             body.appendChild(newDivElement);
         }
+        // if (this.gameSquareNumber === 4) {
+        //   this.gameBoard = [...this.fourBoard];
+        // } else if (this.gameSquareNumber === 5) {
+        //   this.gameBoard = [...this.fiveBoard];
+        // } else {
+        //   this.gameBoard = [...this.sixBoard];
+        // }
+        console.log("this.gameBoard", this.gameBoard);
     };
     return PlayGame2048;
 }());
+body.classList.add(gridsClassNames[gridsAddClassNameCounter]);
 var PlayGame = new PlayGame2048();
 //# sourceMappingURL=typescript.js.map
