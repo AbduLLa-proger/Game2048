@@ -105,7 +105,7 @@ startGame.addEventListener("click", function () {
         gridsRemoveClassNameCounter = gridsAddClassNameCounter;
         gameGridsNumber = gridsNumber;
         mainBody.classList.value = "";
-        new PlayGame2048();
+        PlayGame = new PlayGame2048();
     }
 });
 newGame.addEventListener("click", function () {
@@ -141,17 +141,33 @@ var PlayGame2048 = /** @class */ (function () {
     function PlayGame2048() {
         var _this = this;
         this.gameScore = 0;
-        this.gameBoard = [
+        this.gameBoard = [];
+        this.fourBoard = [
             [0, 0, 0, 0],
             [0, 0, 0, 0],
             [0, 0, 0, 0],
             [0, 0, 0, 0],
         ];
-        this.gameSquareNumber = gameGridsNumber % 4 === 0
+        this.fiveBoard = [
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+        ];
+        this.sixBoard = [
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0],
+        ];
+        this.gameSquareNumber = gameGridsNumber / 4 === 4
             ? 4
-            : gameGridsNumber % 5 === 0
+            : gameGridsNumber / 5 === 5
                 ? 5
-                : gameGridsNumber % 6 === 0
+                : gameGridsNumber / 6 === 6
                     ? 6
                     : 4;
         this.getClassName = function (num) {
@@ -187,7 +203,7 @@ var PlayGame2048 = /** @class */ (function () {
             boardElement.innerText = "".concat(num);
             boardElement.classList.value = "";
             boardElement.classList.add(className);
-            if (num === 4096) {
+            if (num >= 4096) {
                 gameOver = true;
                 mainBody.classList.add("game-over");
             }
@@ -447,17 +463,17 @@ var PlayGame2048 = /** @class */ (function () {
             newDivElement.appendChild(newSpanElement);
             body.appendChild(newDivElement);
         }
-        // if (this.gameSquareNumber === 4) {
-        //   this.gameBoard = [...this.fourBoard];
-        // } else if (this.gameSquareNumber === 5) {
-        //   this.gameBoard = [...this.fiveBoard];
-        // } else {
-        //   this.gameBoard = [...this.sixBoard];
-        // }
-        console.log("this.gameBoard", this.gameBoard);
+        if (this.gameSquareNumber === 4) {
+            this.gameBoard = __spreadArray([], __read(this.fourBoard), false);
+        }
+        else if (this.gameSquareNumber === 5) {
+            this.gameBoard = __spreadArray([], __read(this.fiveBoard), false);
+        }
+        else if (this.gameSquareNumber === 6) {
+            this.gameBoard = __spreadArray([], __read(this.sixBoard), false);
+        }
     };
     return PlayGame2048;
 }());
-body.classList.add(gridsClassNames[gridsAddClassNameCounter]);
 var PlayGame = new PlayGame2048();
 //# sourceMappingURL=typescript.js.map

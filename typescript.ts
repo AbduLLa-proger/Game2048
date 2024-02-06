@@ -89,8 +89,9 @@ startGame.addEventListener("click", () => {
     body.classList.add(gridsClassNames[gridsAddClassNameCounter]);
     gridsRemoveClassNameCounter = gridsAddClassNameCounter;
     gameGridsNumber = gridsNumber;
+
     mainBody.classList.value = "";
-    new PlayGame2048();
+    PlayGame = new PlayGame2048();
   }
 });
 
@@ -124,19 +125,35 @@ document.addEventListener("keydown", (event: KeyboardEvent) => {
 
 class PlayGame2048 {
   private gameScore: number = 0;
-  private gameBoard: number[][] = [
+  private gameBoard: number[][] = [];
+  private fourBoard: number[][] = [
     [0, 0, 0, 0],
     [0, 0, 0, 0],
     [0, 0, 0, 0],
     [0, 0, 0, 0],
   ];
+  private fiveBoard: number[][] = [
+    [0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0],
+  ];
+  private sixBoard: number[][] = [
+    [0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0],
+  ];
 
   private gameSquareNumber =
-    gameGridsNumber % 4 === 0
+    gameGridsNumber / 4 === 4
       ? 4
-      : gameGridsNumber % 5 === 0
+      : gameGridsNumber / 5 === 5
       ? 5
-      : gameGridsNumber % 6 === 0
+      : gameGridsNumber / 6 === 6
       ? 6
       : 4;
   public board: HTMLDivElement[];
@@ -196,7 +213,7 @@ class PlayGame2048 {
     boardElement.innerText = `${num}`;
     boardElement.classList.value = "";
     boardElement.classList.add(className);
-    if (num === 4096) {
+    if (num >= 4096) {
       gameOver = true;
       mainBody.classList.add("game-over");
     }
@@ -471,16 +488,15 @@ class PlayGame2048 {
       newDivElement.appendChild(newSpanElement);
       body.appendChild(newDivElement);
     }
-    // if (this.gameSquareNumber === 4) {
-    //   this.gameBoard = [...this.fourBoard];
-    // } else if (this.gameSquareNumber === 5) {
-    //   this.gameBoard = [...this.fiveBoard];
-    // } else {
-    //   this.gameBoard = [...this.sixBoard];
-    // }
-    console.log("this.gameBoard", this.gameBoard);
+
+    if (this.gameSquareNumber === 4) {
+      this.gameBoard = [...this.fourBoard];
+    } else if (this.gameSquareNumber === 5) {
+      this.gameBoard = [...this.fiveBoard];
+    } else if (this.gameSquareNumber === 6) {
+      this.gameBoard = [...this.sixBoard];
+    }
   }
 }
 
-body.classList.add(gridsClassNames[gridsAddClassNameCounter]);
 let PlayGame = new PlayGame2048();
